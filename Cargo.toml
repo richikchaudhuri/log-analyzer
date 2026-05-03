@@ -1,0 +1,15 @@
+[package]
+name = "log-analyzer"
+version = "0.1.0"
+edition = "2021"
+description = "Parallel NCSA log file analyzer using rayon + regex"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+regex = "1"
+rayon = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
