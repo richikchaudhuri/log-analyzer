@@ -1,0 +1,17 @@
+[package]
+name = "analyzer-core"
+version.workspace = true
+edition.workspace = true
+description = "Core NCSA log parsing + parallel aggregation"
+
+[dependencies]
+rayon.workspace = true
+regex.workspace = true
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "parse"
+harness = false

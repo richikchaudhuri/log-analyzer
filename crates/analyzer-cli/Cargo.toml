@@ -1,0 +1,14 @@
+[package]
+name = "analyzer-cli"
+version.workspace = true
+edition.workspace = true
+description = "CLI for the NCSA log analyzer"
+
+[[bin]]
+name = "log-analyzer"
+path = "src/main.rs"
+
+[dependencies]
+analyzer-core.workspace = true
+anyhow.workspace = true
+clap.workspace = true

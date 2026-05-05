@@ -2,3 +2,19 @@
 **/*.rs.bk
 Cargo.lock.bak
 .DS_Store
+
+# Generated fixture (regenerate with `log-analyzer --gen N`)
+samples/big.log
+
+# Frontend
+web/node_modules
+web/dist
+web/.vite
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# AI summary cache (regenerable; may contain log content)
+cache/
