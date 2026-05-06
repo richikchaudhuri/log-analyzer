@@ -43,7 +43,7 @@ function formatBytesPair(n: number): { value: string; unit?: string } {
 /* Watermark                                                           */
 /* ------------------------------------------------------------------ */
 function Watermark() {
-  const text = '  LOG / ANALYZER  ©  RICK  2026  ·  SPREZZATURAA  ·  ALL RIGHTS RESERVED  '
+  const text = '  LOG / ANALYZER  ©  RICK  2026  ·  ALL RIGHTS RESERVED  '
   const lines = Array.from({ length: 90 })
   return (
     <div className="watermark" aria-hidden="true">
@@ -717,7 +717,7 @@ export default function App() {
       <span>Awaiting log file</span><i>·</i>
       <span>Editorial release · Vol. 01</span><i>·</i>
       <span>Built on Rust + Axum + React</span><i>·</i>
-      <span>By Rick · Sprezzaturaa</span><i>·</i>
+      <span>By Rick</span><i>·</i>
     </>
   )
 
@@ -740,7 +740,6 @@ export default function App() {
           <div className="masthead-meta">
             <span className="pulse"><span className="dot" /> Live</span>
             <span>By Rick</span>
-            <span>Sprezzaturaa</span>
           </div>
         </header>
 
@@ -1060,7 +1059,7 @@ export default function App() {
 
         <footer>
           <span>Log/Analyzer · A study in Rust</span>
-          <span className="accent">© Rick · Sprezzaturaa · MMXXVI</span>
+          <span className="accent">© Rick · MMXXVI</span>
         </footer>
       </main>
     </div>
