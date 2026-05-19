@@ -26,7 +26,7 @@ serde_json = "1"
 sha2 = "0.10"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "set-header", "timeout"] }
+tower-http = { version = "0.6", features = ["cors", "set-header", "timeout", "fs"] }
 
 [profile.release]
 lto = "thin"

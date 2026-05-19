@@ -1,0 +1,25 @@
+# Render Blueprint — one-click deploy of the Rust log analyzer + React UI.
+#
+# Setup: on render.com, click New → Blueprint → connect this GitHub repo.
+# Render reads this file, builds the Dockerfile, and exposes the service.
+#
+# After first deploy, add the GROQ_API_KEY env var in the Render dashboard
+# (Settings → Environment) to enable the /api/ai-summary endpoint. The
+# rest of the API works without it.
+services:
+  - type: web
+    name: log-analyzer
+    runtime: docker
+    plan: free            # 750 hr/mo, sleeps after 15 min idle
+    region: oregon        # change to "singapore" / "frankfurt" if closer
+    healthCheckPath: /api/health
+    autoDeploy: true      # redeploy on every push to main
+    envVars:
+      - key: TRUST_PROXY
+        value: "1"        # we're behind Render's edge — honor X-Forwarded-For
+      - key: AI_RATE_PER_MIN
+        value: "5"
+      - key: ANALYZE_RATE_PER_MIN
+        value: "30"
+      - key: GROQ_API_KEY
+        sync: false       # user enters in dashboard; never committed

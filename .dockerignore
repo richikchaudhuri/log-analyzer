@@ -1,0 +1,28 @@
+# Skip what Cargo + npm regenerate.
+target/
+web/node_modules/
+web/dist/
+
+# IDE + editor noise
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Secrets — never bake into an image
+.env
+.env.local
+
+# Git metadata (Render does its own checkout)
+.git/
+
+# Test outputs
+coverage/
+
+# Local-only docs
+*.md
+!README.md

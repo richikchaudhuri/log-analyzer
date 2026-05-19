@@ -64,7 +64,19 @@ struct SampleQuery {
 async fn main() {
     load_env();
 
-    let bind_addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".into());
+    // BIND_ADDR wins if set explicitly. Otherwise honour Render/Fly/Heroku
+    // style $PORT (binding 0.0.0.0) so the same binary runs on a managed
+    // host with no config. Local default stays 127.0.0.1:8080.
+    let bind_addr = std::env::var("BIND_ADDR").ok()
+        .or_else(|| std::env::var("PORT").ok().map(|p| format!("0.0.0.0:{p}")))
+        .unwrap_or_else(|| "127.0.0.1:8080".into());
+
+    // STATIC_DIR points at a directory of built frontend assets (e.g.
+    // web/dist from Vite). If set and exists, the router will serve those
+    // files for any non-/api/* path, with SPA index.html fallback.
+    let static_dir: Option<String> = std::env::var("STATIC_DIR")
+        .ok()
+        .filter(|d| !d.is_empty() && std::path::Path::new(d).is_dir());
     let ai_rate = parse_rate("AI_RATE_PER_MIN", 5);
     let analyze_rate = parse_rate("ANALYZE_RATE_PER_MIN", 30);
     let trust_proxy = std::env::var("TRUST_PROXY").ok().as_deref() == Some("1");
@@ -92,12 +104,34 @@ async fn main() {
         ))
         .layer(DefaultBodyLimit::max(MAX_UPLOAD_BYTES));
 
-    let app = Router::new()
+    let mut app = Router::new()
         .route("/api/health", get(health))
         .route("/api/sample", get(sample_handler))
         .merge(ai_routes)
         .merge(analyze_routes)
-        .with_state(state)
+        .with_state(state);
+
+    // If a frontend build is available, serve it as the fallback for any
+    // non-/api/* request. SPA routing (e.g. /about) falls back to index.html.
+    if let Some(dir) = static_dir.as_deref() {
+        use tower_http::services::{ServeDir, ServeFile};
+        let serve = ServeDir::new(dir)
+            .not_found_service(ServeFile::new(format!("{dir}/index.html")));
+        app = app.fallback_service(serve);
+    }
+
+    // CSP differs depending on whether we're serving the SPA or running
+    // as an API-only server. The strict `default-src 'none'` would block
+    // every Vite-built script and style; loosen it just enough when the
+    // frontend is bundled, keep the lockdown when this is API-only.
+    let csp = if static_dir.is_some() {
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; \
+         img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
+    } else {
+        "default-src 'none'; frame-ancestors 'none'"
+    };
+
+    let app = app
         .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, REQUEST_TIMEOUT))
         .layer(SetResponseHeaderLayer::overriding(
             HeaderName::from_static("x-content-type-options"),
@@ -113,13 +147,18 @@ async fn main() {
         ))
         .layer(SetResponseHeaderLayer::overriding(
             HeaderName::from_static("content-security-policy"),
-            HeaderValue::from_static("default-src 'none'; frame-ancestors 'none'"),
+            HeaderValue::from_str(csp).expect("csp header value"),
         ))
         .layer(cors);
 
     let addr: SocketAddr = bind_addr.parse().expect("BIND_ADDR must be host:port");
     let listener = TcpListener::bind(addr).await.expect("bind");
     println!("log-analyzer-server listening on http://{}", addr);
+    if let Some(dir) = static_dir.as_deref() {
+        println!("  static frontend → {dir}");
+    } else {
+        println!("  (no STATIC_DIR — running in API-only mode)");
+    }
     println!("  GET  /api/health");
     println!("  GET  /api/sample[?name=default|heavy|attack|sparse]");
     println!("  POST /api/analyze     (multipart, field=log; {analyze_rate} req/min/IP)");

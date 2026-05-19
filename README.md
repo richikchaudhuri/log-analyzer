@@ -97,6 +97,39 @@ npm run dev
 
 Drop any `*.log` in NCSA Common Log Format on the page, or click one of the bundled samples.
 
+## Deploy
+
+The repo ships a [`Dockerfile`](Dockerfile) that builds the React frontend +
+Rust server in a multi-stage build, plus a [`render.yaml`](render.yaml)
+Blueprint so [Render](https://render.com)'s free tier picks it up with zero
+config.
+
+**One-time setup (~3 min):**
+
+1. Sign up at https://render.com (free, no credit card).
+2. Dashboard → **New** → **Blueprint** → connect this GitHub repo.
+   Render reads `render.yaml` and provisions the service.
+3. After first build, **Settings → Environment** → add `GROQ_API_KEY` (free
+   tier at https://console.groq.com/keys). Skip if you don't need
+   `/api/ai-summary` — the rest of the API works without it.
+4. Your URL is `https://log-analyzer-<random>.onrender.com`.
+
+The free tier sleeps after 15 min of inactivity. First request after sleep
+takes ~30 s while the container wakes; subsequent requests are normal.
+Every `git push` to `main` triggers an auto-redeploy.
+
+**Run the Docker image locally:**
+
+```bash
+docker build -t log-analyzer .
+docker run -p 8080:8080 -e GROQ_API_KEY=$GROQ_API_KEY log-analyzer
+# open http://localhost:8080
+```
+
+The server serves the React build at `/` and the API at `/api/*` from the
+same origin, so the frontend's `fetch('/api/...')` calls work without
+CORS configuration.
+
 ## CLI
 
 ```bash
