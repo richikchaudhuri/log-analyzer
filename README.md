@@ -2,6 +2,10 @@
 
 A web-server log parser written in Rust to learn data-parallel patterns with [`rayon`](https://docs.rs/rayon). Parses NCSA Common Log Format (Apache / nginx access logs), aggregates per-IP / per-path / per-status / hourly stats, and exposes the result through a small `axum` HTTP API and a React frontend. Optional AI summary endpoint calls Groq's free-tier Llama 3.3 70B in JSON mode to translate the stats into both a technical and a plain-English read.
 
+**🔗 Live demo:** **<https://log-analyzer-gkxb.onrender.com>**
+
+> Hosted on Render's free tier — the first request after ~15 min of inactivity wakes the container (~30 s cold start), every request after that is fast.
+
 > **What this is, honestly**: a portfolio piece. The interesting Rust is ~90 lines in [`analyzer-core/src/lib.rs`](crates/analyzer-core/src/lib.rs) — a single-pass parallel `fold` / `reduce` over the lines, a `OnceLock`-cached regex, and a commutative `Stats::merge` that lets the rollup run on any number of cores. The rest is integration glue.
 
 ## Throughput
@@ -99,6 +103,10 @@ Drop any `*.log` in NCSA Common Log Format on the page, or click one of the bund
 
 ## Deploy
 
+Currently deployed at **<https://log-analyzer-gkxb.onrender.com>** on
+Render's free tier. Reproduce the deploy on your own GitHub fork in
+about 3 minutes:
+
 The repo ships a [`Dockerfile`](Dockerfile) that builds the React frontend +
 Rust server in a multi-stage build, plus a [`render.yaml`](render.yaml)
 Blueprint so [Render](https://render.com)'s free tier picks it up with zero
@@ -107,7 +115,7 @@ config.
 **One-time setup (~3 min):**
 
 1. Sign up at https://render.com (free, no credit card).
-2. Dashboard → **New** → **Blueprint** → connect this GitHub repo.
+2. Dashboard → **New** → **Blueprint** → connect your fork of this repo.
    Render reads `render.yaml` and provisions the service.
 3. After first build, **Settings → Environment** → add `GROQ_API_KEY` (free
    tier at https://console.groq.com/keys). Skip if you don't need
